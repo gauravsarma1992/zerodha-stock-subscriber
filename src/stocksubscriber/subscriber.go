@@ -13,7 +13,7 @@ type (
 	SubscriberConfig struct {
 		ApiKey      string   `json:"api_key"`
 		AccessToken string   `json:"access_token"`
-		Stocks      []string `json:"stocks"`
+		Stocks      []uint32 `json:"stocks"`
 	}
 )
 
@@ -34,6 +34,7 @@ func (subscriber *Subscriber) Setup() (err error) {
 	if subscriber.KiteClient, err = NewKiteClient(
 		subscriber.Config.ApiKey,
 		subscriber.Config.AccessToken,
+		subscriber.Config.Stocks,
 		subscriber.WorkerMgr,
 	); err != nil {
 		return

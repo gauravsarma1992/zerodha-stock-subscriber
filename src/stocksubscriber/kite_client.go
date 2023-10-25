@@ -1,6 +1,7 @@
 package stocksubscriber
 
 import (
+	"fmt"
 	"log"
 
 	kitemodels "github.com/zerodha/gokiteconnect/v4/models"
@@ -9,10 +10,11 @@ import (
 
 type (
 	KiteClient struct {
-		ApiKey      string
-		AccessToken string
-		Ticker      *kiteticker.Ticker
-		TickHandler TickHandler
+		ApiKey           string
+		AccessToken      string
+		Ticker           *kiteticker.Ticker
+		TickHandler      TickHandler
+		SubscribedStocks []uint32
 	}
 	TickHandler interface {
 		Process(stock *Stock) (err error)
@@ -34,18 +36,27 @@ func (stock *Stock) GetID() (stockID uint16) {
 	return
 }
 
-func NewKiteClient(apiKey, accessToken string, tickHandler TickHandler) (kc *KiteClient, err error) {
+func NewKiteClient(apiKey, accessToken string, stocks []uint32, tickHandler TickHandler) (kc *KiteClient, err error) {
 	kc = &KiteClient{
-		ApiKey:      apiKey,
-		AccessToken: accessToken,
-		Ticker:      kiteticker.New(apiKey, accessToken),
-		TickHandler: tickHandler,
+		ApiKey:           apiKey,
+		AccessToken:      accessToken,
+		Ticker:           kiteticker.New(apiKey, accessToken),
+		TickHandler:      tickHandler,
+		SubscribedStocks: stocks,
 	}
 	return
 }
 
 func (kc *KiteClient) OnConnect() {
 	log.Println("KiteClient Connect")
+	err := kc.Ticker.Subscribe(kc.SubscribedStocks)
+	if err != nil {
+		fmt.Println("err: ", err)
+	}
+	err = kc.Ticker.SetMode(kiteticker.ModeFull, kc.SubscribedStocks)
+	if err != nil {
+		fmt.Println("err: ", err)
+	}
 	return
 }
 
