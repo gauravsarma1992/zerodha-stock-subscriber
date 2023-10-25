@@ -27,7 +27,8 @@ func NewSubscriber(config *SubscriberConfig, callbackHandler CallbackHandler) (s
 	subscriber = &Subscriber{
 		Config:          config,
 		CallbackHandler: callbackHandler,
-		ExitCh:          make(chan bool),
+
+		ExitCh: make(chan bool),
 	}
 	if err = subscriber.Setup(); err != nil {
 		return
@@ -36,7 +37,7 @@ func NewSubscriber(config *SubscriberConfig, callbackHandler CallbackHandler) (s
 }
 
 func (subscriber *Subscriber) Setup() (err error) {
-	if subscriber.WorkerMgr, err = NewWorkerMgr(); err != nil {
+	if subscriber.WorkerMgr, err = NewWorkerMgr(subscriber.CallbackHandler); err != nil {
 		return
 	}
 	if subscriber.KiteClient, err = NewKiteClient(
