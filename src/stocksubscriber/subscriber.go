@@ -6,10 +6,11 @@ const (
 
 type (
 	Subscriber struct {
-		WorkerMgr       *WorkerMgr
-		KiteClient      *KiteClient
-		Config          *SubscriberConfig
-		CallbackHandler CallbackHandler
+		WorkerMgr *WorkerMgr
+		Config    *SubscriberConfig
+
+		StockPollerClient StockPoller
+		CallbackHandler   CallbackHandler
 
 		ExitCh chan bool
 	}
@@ -17,11 +18,35 @@ type (
 		ApiKey      string   `json:"api_key"`
 		AccessToken string   `json:"access_token"`
 		Stocks      []uint32 `json:"stocks"`
+		IsLocal     bool     `json:"is_local"`
 	}
 	CallbackHandler interface {
 		Process(*Stock) error
 	}
+	StockPoller interface {
+		Run() error
+	}
 )
+
+func NewStockPollerClient(
+	isLocal bool,
+	apiKey, accessToken string,
+	stocks []uint32,
+	callback CallbackHandler,
+) (poller StockPoller, err error) {
+
+	if isLocal == true {
+		poller, _ = NewDummyClient()
+		return
+	}
+	poller, err = NewKiteClient(
+		apiKey,
+		accessToken,
+		stocks,
+		callback,
+	)
+	return
+}
 
 func NewSubscriber(config *SubscriberConfig, callbackHandler CallbackHandler) (subscriber *Subscriber, err error) {
 	subscriber = &Subscriber{
@@ -40,7 +65,8 @@ func (subscriber *Subscriber) Setup() (err error) {
 	if subscriber.WorkerMgr, err = NewWorkerMgr(subscriber.CallbackHandler); err != nil {
 		return
 	}
-	if subscriber.KiteClient, err = NewKiteClient(
+	if subscriber.StockPollerClient, err = NewStockPollerClient(
+		subscriber.Config.IsLocal,
 		subscriber.Config.ApiKey,
 		subscriber.Config.AccessToken,
 		subscriber.Config.Stocks,
@@ -52,7 +78,7 @@ func (subscriber *Subscriber) Setup() (err error) {
 }
 
 func (subscriber *Subscriber) Run() (err error) {
-	go subscriber.KiteClient.Run()
+	go subscriber.StockPollerClient.Run()
 	go subscriber.WorkerMgr.Run()
 	<-subscriber.ExitCh
 	return
