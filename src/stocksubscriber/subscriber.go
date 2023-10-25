@@ -6,20 +6,28 @@ const (
 
 type (
 	Subscriber struct {
-		WorkerMgr  *WorkerMgr
-		KiteClient *KiteClient
-		Config     *SubscriberConfig `json:"config"`
+		WorkerMgr       *WorkerMgr
+		KiteClient      *KiteClient
+		Config          *SubscriberConfig
+		CallbackHandler CallbackHandler
+
+		ExitCh chan bool
 	}
 	SubscriberConfig struct {
 		ApiKey      string   `json:"api_key"`
 		AccessToken string   `json:"access_token"`
 		Stocks      []uint32 `json:"stocks"`
 	}
+	CallbackHandler interface {
+		Process(*Stock) error
+	}
 )
 
-func NewSubscriber(config *SubscriberConfig) (subscriber *Subscriber, err error) {
+func NewSubscriber(config *SubscriberConfig, callbackHandler CallbackHandler) (subscriber *Subscriber, err error) {
 	subscriber = &Subscriber{
-		Config: config,
+		Config:          config,
+		CallbackHandler: callbackHandler,
+		ExitCh:          make(chan bool),
 	}
 	if err = subscriber.Setup(); err != nil {
 		return
@@ -45,5 +53,6 @@ func (subscriber *Subscriber) Setup() (err error) {
 func (subscriber *Subscriber) Run() (err error) {
 	go subscriber.KiteClient.Run()
 	go subscriber.WorkerMgr.Run()
+	<-subscriber.ExitCh
 	return
 }

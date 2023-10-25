@@ -1,7 +1,6 @@
 package stocksubscriber
 
 import (
-	"fmt"
 	"log"
 
 	kitemodels "github.com/zerodha/gokiteconnect/v4/models"
@@ -20,7 +19,7 @@ type (
 		Process(stock *Stock) (err error)
 	}
 	Stock struct {
-		Tick *kitemodels.Tick
+		Tick *kitemodels.Tick `json:"tick"`
 	}
 )
 
@@ -51,11 +50,11 @@ func (kc *KiteClient) OnConnect() {
 	log.Println("KiteClient Connect")
 	err := kc.Ticker.Subscribe(kc.SubscribedStocks)
 	if err != nil {
-		fmt.Println("err: ", err)
+		log.Println("err: ", err)
 	}
 	err = kc.Ticker.SetMode(kiteticker.ModeFull, kc.SubscribedStocks)
 	if err != nil {
-		fmt.Println("err: ", err)
+		log.Println("err: ", err)
 	}
 	return
 }

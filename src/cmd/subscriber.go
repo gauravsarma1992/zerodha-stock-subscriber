@@ -6,6 +6,15 @@ import (
 	"github.com/gauravsarma1992/stocksubscriber/stocksubscriber"
 )
 
+type (
+	LoggingCallbackHandler struct{}
+)
+
+func (handler *LoggingCallbackHandler) Process(stock *stocksubscriber.Stock) (err error) {
+	log.Println("Inside handler", stock)
+	return
+}
+
 func main() {
 	var (
 		subsObj    *stocksubscriber.Subscriber
@@ -18,7 +27,7 @@ func main() {
 		AccessToken: "temp",
 		Stocks:      []uint32{43423},
 	}
-	if subsObj, err = stocksubscriber.NewSubscriber(subsConfig); err != nil {
+	if subsObj, err = stocksubscriber.NewSubscriber(subsConfig, &LoggingCallbackHandler{}); err != nil {
 		log.Fatal(err)
 	}
 	if err = subsObj.Run(); err != nil {
