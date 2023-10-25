@@ -6,14 +6,15 @@ const (
 
 type (
 	Subscriber struct {
-		WorkerMgr *WorkerMgr
-		Config    *SubscriberConfig `json:"config"`
+		WorkerMgr  *WorkerMgr
+		KiteClient *KiteClient
+		Config     *SubscriberConfig `json:"config"`
 	}
 	SubscriberConfig struct {
-		ApiToken string   `json:"api_token"`
-		Stocks   []string `json:"stocks"`
+		ApiKey      string   `json:"api_key"`
+		AccessToken string   `json:"access_token"`
+		Stocks      []string `json:"stocks"`
 	}
-	Stock struct{}
 )
 
 func NewSubscriber(config *SubscriberConfig) (subscriber *Subscriber, err error) {
@@ -30,9 +31,18 @@ func (subscriber *Subscriber) Setup() (err error) {
 	if subscriber.WorkerMgr, err = NewWorkerMgr(); err != nil {
 		return
 	}
+	if subscriber.KiteClient, err = NewKiteClient(
+		subscriber.Config.ApiKey,
+		subscriber.Config.AccessToken,
+		subscriber.WorkerMgr,
+	); err != nil {
+		return
+	}
 	return
 }
 
 func (subscriber *Subscriber) Run() (err error) {
+	go subscriber.KiteClient.Run()
+	go subscriber.WorkerMgr.Run()
 	return
 }

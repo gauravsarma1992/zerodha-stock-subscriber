@@ -42,6 +42,11 @@ func (workerMgr *WorkerMgr) Setup() (err error) {
 	return
 }
 
+func (workerMgr *WorkerMgr) Process(stock *Stock) (err error) {
+	workerMgr.Workers[stock.GetID()%ConcurrencyFactor].InpCh <- stock
+	return
+}
+
 func (workerMgr *WorkerMgr) Run() (err error) {
 	for _, worker := range workerMgr.Workers {
 		go worker.Run()

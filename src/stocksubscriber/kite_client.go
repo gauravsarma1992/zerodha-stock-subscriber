@@ -12,14 +12,34 @@ type (
 		ApiKey      string
 		AccessToken string
 		Ticker      *kiteticker.Ticker
+		TickHandler TickHandler
+	}
+	TickHandler interface {
+		Process(stock *Stock) (err error)
+	}
+	Stock struct {
+		Tick *kitemodels.Tick
 	}
 )
 
-func NewKiteClient(apiKey, accessToken string) (kc *KiteClient, err error) {
+func NewStock(tick *kitemodels.Tick) (stock *Stock, err error) {
+	stock = &Stock{
+		Tick: tick,
+	}
+	return
+}
+
+func (stock *Stock) GetID() (stockID uint16) {
+	stockID = uint16(stock.Tick.InstrumentToken)
+	return
+}
+
+func NewKiteClient(apiKey, accessToken string, tickHandler TickHandler) (kc *KiteClient, err error) {
 	kc = &KiteClient{
 		ApiKey:      apiKey,
 		AccessToken: accessToken,
 		Ticker:      kiteticker.New(apiKey, accessToken),
+		TickHandler: tickHandler,
 	}
 	return
 }
@@ -36,6 +56,8 @@ func (kc *KiteClient) OnClose(code int, reason string) {
 
 func (kc *KiteClient) OnTick(tick kitemodels.Tick) {
 	log.Println("Tick received ->", tick)
+	stock, _ := NewStock(&tick)
+	kc.TickHandler.Process(stock)
 }
 
 func (kc *KiteClient) Run() (err error) {
