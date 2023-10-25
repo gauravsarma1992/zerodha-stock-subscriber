@@ -65,6 +65,8 @@ func NewWorker(id uint16, callbackHandler CallbackHandler) (worker *Worker, err 
 		ID:     id,
 		InpCh:  make(chan *Stock, 1024),
 		ExitCh: make(chan bool),
+
+		CallbackHandler: callbackHandler,
 	}
 	return
 }
@@ -73,7 +75,6 @@ func (worker *Worker) Run() (err error) {
 	for {
 		select {
 		case stock := <-worker.InpCh:
-			log.Println("Stock received in worker", stock)
 			if err = worker.CallbackHandler.Process(stock); err != nil {
 				log.Println(err)
 			}

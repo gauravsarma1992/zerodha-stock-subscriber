@@ -36,7 +36,7 @@ func NewStockPollerClient(
 ) (poller StockPoller, err error) {
 
 	if isLocal == true {
-		poller, _ = NewDummyClient()
+		poller, _ = NewDummyClient(callback)
 		return
 	}
 	poller, err = NewKiteClient(

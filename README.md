@@ -1,11 +1,8 @@
-package main
+# Zerodha Stock Subscriber
 
-import (
-	"log"
-	"time"
+## Examples
 
-	"github.com/gauravsarma1992/stocksubscriber/stocksubscriber"
-)
+```go
 
 type (
 	LoggingCallbackHandler struct {
@@ -38,7 +35,6 @@ func main() {
 		ApiKey:      "temp",
 		AccessToken: "temp",
 		Stocks:      []uint32{43423},
-		IsLocal:     true,
 	}
 
 	if subsObj, err = stocksubscriber.NewSubscriber(
@@ -55,3 +51,4 @@ func main() {
 	}
 
 }
+```
